@@ -14,6 +14,10 @@ class BusinessPermission
 
         abort_if(! $user || ! $business, 403);
 
+        if ($user->hasRole('admin')) {
+            return $next($request);
+        }
+
         foreach ($permissions as $permission) {
             abort_unless($user->hasPermissionInBusiness($permission, $business), 403);
         }
