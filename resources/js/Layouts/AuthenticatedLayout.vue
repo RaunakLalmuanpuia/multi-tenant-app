@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
@@ -9,6 +9,7 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 
 const showingNavigationDropdown = ref(false)
 const showInvitations = ref(false)
+const showBusinessSwitcher = ref(false)
 const page = usePage()
 
 const currentBusinessId = () => page.props.auth.current_business_id
@@ -23,8 +24,21 @@ const homeUrl = () => isAdmin()
 
 // Switching business = navigating to that business's dashboard URL
 const switchBusiness = (id) => {
+    showBusinessSwitcher.value = false
     router.visit(route('dashboard', { business: id }))
 }
+
+const currentBusiness = () =>
+    page.props.auth.businesses.find(b => b.id === page.props.auth.current_business_id)
+
+function closeDropdowns(e) {
+    if (!e.target.closest('[data-dropdown]')) {
+        showBusinessSwitcher.value = false
+        showInvitations.value = false
+    }
+}
+onMounted(() => document.addEventListener('click', closeDropdowns))
+onUnmounted(() => document.removeEventListener('click', closeDropdowns))
 
 const pendingInvitations = () => page.props.auth.pending_invitations ?? []
 
@@ -68,17 +82,48 @@ function declineInvitation(token) {
                                 class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex"
                             >
 
-                                <select
+                                <!-- Business switcher -->
+                                <div
                                     v-if="page.props.auth.businesses.length"
-                                    :value="page.props.auth.current_business_id"
-                                    @change="switchBusiness($event.target.value)"
-                                    class="border px-2 py-1 rounded mr-4"
+                                    class="relative flex items-center"
+                                    data-dropdown
                                 >
-                                    <option disabled value="">Select Business</option>
-                                    <option v-for="b in page.props.auth.businesses" :key="b.id" :value="b.id">
-                                        {{ b.name }}
-                                    </option>
-                                </select>
+                                    <button
+                                        @click="showBusinessSwitcher = !showBusinessSwitcher"
+                                        class="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 transition max-w-[200px]"
+                                    >
+                                        <span class="h-2 w-2 rounded-full bg-emerald-400 shrink-0"></span>
+                                        <span class="truncate">{{ currentBusiness()?.name ?? 'Select Business' }}</span>
+                                        <svg class="h-4 w-4 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"/>
+                                        </svg>
+                                    </button>
+
+                                    <div
+                                        v-if="showBusinessSwitcher"
+                                        class="absolute left-0 top-full mt-2 w-56 rounded-xl border border-gray-200 bg-white shadow-lg z-50 overflow-hidden"
+                                    >
+                                        <div class="px-3 py-2 border-b border-gray-100">
+                                            <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Your Businesses</p>
+                                        </div>
+                                        <div class="py-1">
+                                            <button
+                                                v-for="b in page.props.auth.businesses"
+                                                :key="b.id"
+                                                @click="switchBusiness(b.id)"
+                                                class="flex w-full items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
+                                            >
+                                                <span
+                                                    :class="['h-2 w-2 rounded-full shrink-0', b.id === page.props.auth.current_business_id ? 'bg-emerald-400' : 'bg-transparent border border-gray-300']"
+                                                ></span>
+                                                <span class="truncate">{{ b.name }}</span>
+                                                <svg v-if="b.id === page.props.auth.current_business_id" class="ml-auto h-4 w-4 text-indigo-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <!-- Admin nav -->
                                 <template v-if="isAdmin()">
@@ -111,7 +156,7 @@ function declineInvitation(token) {
                         <div class="hidden sm:ms-6 sm:flex sm:items-center gap-2">
 
                             <!-- Invitation bell -->
-                            <div v-if="!isAdmin()" class="relative">
+                            <div v-if="!isAdmin()" class="relative" data-dropdown>
                                 <button
                                     @click="showInvitations = !showInvitations"
                                     class="relative p-2 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition"
