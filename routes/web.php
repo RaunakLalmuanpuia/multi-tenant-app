@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\VendorController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
@@ -57,6 +59,16 @@ Route::middleware(['auth', 'verified', 'member'])
         Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
         Route::put('/roles/{role}', [RoleController::class, 'update'])->name('roles.update');
         Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
+
+        Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
+        Route::post('/clients', [ClientController::class, 'store'])->name('clients.store');
+        Route::put('/clients/{client}', [ClientController::class, 'update'])->name('clients.update');
+        Route::delete('/clients/{client}', [ClientController::class, 'destroy'])->name('clients.destroy');
+
+        Route::get('/vendors', [VendorController::class, 'index'])->name('vendors.index');
+        Route::post('/vendors', [VendorController::class, 'store'])->name('vendors.store');
+        Route::put('/vendors/{vendor}', [VendorController::class, 'update'])->name('vendors.update');
+        Route::delete('/vendors/{vendor}', [VendorController::class, 'destroy'])->name('vendors.destroy');
 
     });
 

@@ -146,6 +146,16 @@ function declineInvitation(token) {
                                     >Team</NavLink>
 
                                     <NavLink
+                                        :href="route('clients.index', { business: currentBusinessId() })"
+                                        :active="route().current('clients.index')"
+                                    >Clients</NavLink>
+
+                                    <NavLink
+                                        :href="route('vendors.index', { business: currentBusinessId() })"
+                                        :active="route().current('vendors.index')"
+                                    >Vendors</NavLink>
+
+                                    <NavLink
                                         :href="route('roles.index', { business: currentBusinessId() })"
                                         :active="route().current('roles.index')"
                                     >Roles</NavLink>
