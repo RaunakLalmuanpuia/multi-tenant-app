@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('business_user_roles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('business_id')->constrained('businesses')->cascadeOnDelete();
+            $table->foreignUuid('business_id')->constrained('businesses')->cascadeOnDelete();
             $table->foreignId('role_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
 

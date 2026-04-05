@@ -138,6 +138,18 @@ class InvitationController extends Controller
             ->with('success', 'Welcome to ' . $invitation->business->name . '!');
     }
 
+    public function decline(string $token)
+    {
+        $invitation = Invitation::where('token', $token)
+            ->where('email', auth()->user()->email)
+            ->whereNull('accepted_at')
+            ->firstOrFail();
+
+        $invitation->delete();
+
+        return back();
+    }
+
     public function destroy(Request $request, Business $business, Invitation $invitation)
     {
         abort_if($invitation->business_id !== $business->id, 403);

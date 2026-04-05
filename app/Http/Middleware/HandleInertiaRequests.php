@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Invitation;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Spatie\Permission\Models\Permission;
@@ -34,6 +35,20 @@ class HandleInertiaRequests extends Middleware
 
                 // Current business comes from the URL, not session
                 'current_business_id' => $business?->id,
+
+                // Pending invitations for this user (to show in-app notifications)
+                'pending_invitations' => $user && !$user->hasRole('admin')
+                    ? Invitation::with(['business', 'role'])
+                        ->where('email', $user->email)
+                        ->whereNull('accepted_at')
+                        ->where('expires_at', '>', now())
+                        ->get()
+                        ->map(fn($inv) => [
+                            'token'         => $inv->token,
+                            'business_name' => $inv->business->name,
+                            'role_name'     => $inv->role->name,
+                        ])
+                    : [],
 
                 // Admin gets all permissions; others get their role's permissions for this business
                 'permissions' => match (true) {

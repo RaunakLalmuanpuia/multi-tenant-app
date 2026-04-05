@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->foreignId('last_business_id')
+            $table->foreignUuid('last_business_id')
                 ->nullable()
                 ->after('email')
                 ->constrained('businesses')

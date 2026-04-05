@@ -14,15 +14,9 @@ class DummyDataSeeder extends Seeder
     public function run(): void
     {
         // ─── Businesses ───────────────────────────────────────────────
-        [$alpha, $beta, $gamma] = Business::insert([
-            ['name' => 'Alpha Accounting Firm', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Beta Finance Group',    'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Gamma Tax Consultants', 'created_at' => now(), 'updated_at' => now()],
-        ]);
-
-        $alpha = Business::where('name', 'Alpha Accounting Firm')->first();
-        $beta  = Business::where('name', 'Beta Finance Group')->first();
-        $gamma = Business::where('name', 'Gamma Tax Consultants')->first();
+        $alpha = Business::create(['name' => 'Alpha Accounting Firm']);
+        $beta  = Business::create(['name' => 'Beta Finance Group']);
+        $gamma = Business::create(['name' => 'Gamma Tax Consultants']);
 
         // ─── Roles ────────────────────────────────────────────────────
         $adminRole = Role::where('name', 'admin')->first();
@@ -60,10 +54,13 @@ class DummyDataSeeder extends Seeder
         ];
 
         foreach ($users as $userData) {
+            $firstBusiness = $userData['assignments'][0][0];
+
             $user = User::create([
-                'name'     => $userData['name'],
-                'email'    => $userData['email'],
-                'password' => Hash::make('password'),
+                'name'             => $userData['name'],
+                'email'            => $userData['email'],
+                'password'         => Hash::make('password'),
+                'last_business_id' => $firstBusiness->id,
             ]);
 
             foreach ($userData['assignments'] as [$business, $role]) {

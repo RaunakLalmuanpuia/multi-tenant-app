@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::create('business_user', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('business_id')->constrained('businesses')->cascadeOnDelete();
+            $table->foreignUuid('business_id')->constrained('businesses')->cascadeOnDelete();
         });
     }
 

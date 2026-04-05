@@ -63,6 +63,7 @@ Route::middleware(['auth', 'verified', 'member'])
 // ── Invitations (public token link, auth checked in controller) ───────
 Route::get('/invite/{token}', [InvitationController::class, 'show'])->name('invitation.show');
 Route::post('/invite/{token}/accept', [InvitationController::class, 'accept'])->name('invitation.accept');
+Route::delete('/invite/{token}/decline', [InvitationController::class, 'decline'])->middleware('auth')->name('invitation.decline');
 
 // ── Profile (auth only, no business required) ─────────────────────────
 Route::middleware('auth')->group(function () {

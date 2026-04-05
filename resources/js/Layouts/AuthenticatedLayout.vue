@@ -8,6 +8,7 @@ import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 
 const showingNavigationDropdown = ref(false)
+const showInvitations = ref(false)
 const page = usePage()
 
 const currentBusinessId = () => page.props.auth.current_business_id
@@ -23,6 +24,22 @@ const homeUrl = () => isAdmin()
 // Switching business = navigating to that business's dashboard URL
 const switchBusiness = (id) => {
     router.visit(route('dashboard', { business: id }))
+}
+
+const pendingInvitations = () => page.props.auth.pending_invitations ?? []
+
+function acceptInvitation(token) {
+    router.post(route('invitation.accept', token), {}, {
+        onSuccess: () => { showInvitations.value = false },
+    })
+}
+
+function declineInvitation(token) {
+    router.delete(route('invitation.decline', token), {}, {
+        onSuccess: () => {
+            if (!pendingInvitations().length) showInvitations.value = false
+        },
+    })
 }
 
 </script>
@@ -91,7 +108,59 @@ const switchBusiness = (id) => {
                             </div>
                         </div>
 
-                        <div class="hidden sm:ms-6 sm:flex sm:items-center">
+                        <div class="hidden sm:ms-6 sm:flex sm:items-center gap-2">
+
+                            <!-- Invitation bell -->
+                            <div v-if="!isAdmin()" class="relative">
+                                <button
+                                    @click="showInvitations = !showInvitations"
+                                    class="relative p-2 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition"
+                                >
+                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                    </svg>
+                                    <span
+                                        v-if="pendingInvitations().length"
+                                        class="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"
+                                    ></span>
+                                </button>
+
+                                <!-- Dropdown panel -->
+                                <div
+                                    v-if="showInvitations"
+                                    class="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden"
+                                >
+                                    <div class="px-4 py-3 border-b border-gray-100">
+                                        <p class="text-sm font-semibold text-gray-700">Pending Invitations</p>
+                                    </div>
+
+                                    <div v-if="pendingInvitations().length" class="divide-y divide-gray-50">
+                                        <div
+                                            v-for="inv in pendingInvitations()"
+                                            :key="inv.token"
+                                            class="px-4 py-3"
+                                        >
+                                            <p class="text-sm font-medium text-gray-900">{{ inv.business_name }}</p>
+                                            <p class="text-xs text-gray-500 mt-0.5 capitalize">Role: {{ inv.role_name }}</p>
+                                            <div class="flex gap-2 mt-2">
+                                                <button
+                                                    @click="acceptInvitation(inv.token)"
+                                                    class="rounded-lg bg-indigo-600 px-3 py-1 text-xs font-medium text-white hover:bg-indigo-700 transition"
+                                                >Accept</button>
+                                                <button
+                                                    @click="declineInvitation(inv.token)"
+                                                    class="rounded-lg border border-gray-300 px-3 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 transition"
+                                                >Decline</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <p v-else class="px-4 py-4 text-sm text-gray-400 text-center">
+                                        No pending invitations
+                                    </p>
+                                </div>
+                            </div>
+
                             <!-- Settings Dropdown -->
                             <div class="relative ms-3">
                                 <Dropdown align="right" width="48">
