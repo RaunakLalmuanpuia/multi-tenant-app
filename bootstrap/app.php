@@ -16,7 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
         $middleware->alias([
-            'member' => \App\Http\Middleware\EnsureBelongsToBusiness::class,
+            'member'             => \App\Http\Middleware\EnsureBelongsToBusiness::class,
+            'role'               => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission'         => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+            'biz.permission'     => \App\Http\Middleware\BusinessPermission::class,
         ]);
 
         //

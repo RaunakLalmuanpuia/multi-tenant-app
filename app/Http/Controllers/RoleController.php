@@ -16,15 +16,8 @@ class RoleController extends Controller
     {
         return [
             'Dashboard'       => ['view dashboard'],
-            'Invoices'        => ['view invoices', 'create invoice', 'edit invoice', 'delete invoice', 'send invoice'],
-            'Bills'           => ['view bills', 'create bill', 'edit bill', 'delete bill'],
-            'Payments'        => ['view payments', 'record payment', 'edit payment', 'delete payment'],
             'Clients'         => ['view clients', 'create client', 'edit client', 'delete client'],
             'Vendors'         => ['view vendors', 'create vendor', 'edit vendor', 'delete vendor'],
-            'Accounts'        => ['view accounts', 'create account', 'edit account', 'delete account'],
-            'Transactions'    => ['view transactions', 'create transaction', 'edit transaction', 'delete transaction'],
-            'Reports'         => ['view reports', 'export reports'],
-            'Tax'             => ['view tax', 'manage tax'],
             'Settings'        => ['view settings', 'manage settings'],
             'User Management' => ['view users', 'invite user', 'remove user', 'assign roles'],
         ];

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\BusinessRolePermission;
 use App\Models\BusinessUserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -101,13 +102,24 @@ class User extends Authenticatable
             ->exists();
     }
 
-    public function hasPermissionInBusiness($permission, ?int $businessId = null): bool
+    public function hasPermissionInBusiness(string $permission, Business $business): bool
     {
-        $businessId ??= request()->route('business')?->id;
+        $businessRole = $this->businessRoles()
+            ->where('business_id', $business->id)
+            ->with('role.permissions')
+            ->first();
 
-        return $this->businessRoles()
-            ->where('business_id', $businessId)
-            ->whereHas('role.permissions', fn($q) => $q->where('name', $permission))
-            ->exists();
+        if (! $businessRole) return false;
+
+        $overrides = BusinessRolePermission::where('business_id', $business->id)
+            ->where('role_id', $businessRole->role_id)
+            ->with('permission')
+            ->get();
+
+        $effective = $overrides->isNotEmpty()
+            ? $overrides->pluck('permission.name')
+            : $businessRole->role->permissions->pluck('name');
+
+        return $effective->contains($permission);
     }
 }

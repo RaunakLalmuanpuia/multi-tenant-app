@@ -62,29 +62,20 @@ class DummyDataSeeder extends Seeder
         // Beta:  User role gets extra reporting access
         // Gamma: uses global defaults (no overrides)
 
+        // Alpha: CA role is restricted — no delete permissions
         $this->seedBusinessRolePermissions($alpha->id, $caRole->id, [
             'view dashboard',
-            'view invoices', 'create invoice', 'edit invoice', 'send invoice',
-            'view bills', 'create bill', 'edit bill',
-            'view payments', 'record payment', 'edit payment',
             'view clients', 'create client', 'edit client',
             'view vendors', 'create vendor', 'edit vendor',
-            'view accounts', 'create account', 'edit account',
-            'view transactions', 'create transaction', 'edit transaction',
-            'view reports',
-            'view tax',
+            'view settings',
+            'view users',
         ]);
 
+        // Beta: User role gets extra vendor management access
         $this->seedBusinessRolePermissions($beta->id, $userRole->id, [
             'view dashboard',
-            'view invoices', 'create invoice',
-            'view bills', 'create bill',
-            'view payments', 'record payment',
-            'view clients', 'create client',
-            'view vendors', 'create vendor',
-            'view accounts',
-            'view transactions', 'create transaction',
-            'view reports', 'export reports', // extra: export reports vs global default
+            'view clients', 'create client', 'edit client',
+            'view vendors', 'create vendor', 'edit vendor',
         ]);
 
         // ─── Users ────────────────────────────────────────────────────

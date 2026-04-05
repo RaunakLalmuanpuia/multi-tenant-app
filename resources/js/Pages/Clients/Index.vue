@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { router, useForm } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
+import { hasPermission } from '@/utils/permissions'
 
 const props = defineProps({
     business: Object,
@@ -11,6 +12,10 @@ const props = defineProps({
 // ── Form ──────────────────────────────────────────────────────
 const showModal  = ref(false)
 const editing    = ref(null)
+
+const canCreate = hasPermission('create client')
+const canEdit   = hasPermission('edit client')
+const canDelete = hasPermission('delete client')
 
 const form = useForm({ name: '', email: '', phone: '' })
 
@@ -55,6 +60,7 @@ function destroy(client) {
                     <p class="text-sm text-gray-500 mt-0.5">{{ clients.length }} client{{ clients.length !== 1 ? 's' : '' }}</p>
                 </div>
                 <button
+                    v-if="canCreate"
                     @click="openCreate"
                     class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition"
                 >
@@ -86,8 +92,8 @@ function destroy(client) {
                         <div class="col-span-4 text-sm text-gray-500">{{ client.email ?? '—' }}</div>
                         <div class="col-span-3 text-sm text-gray-500">{{ client.phone ?? '—' }}</div>
                         <div class="col-span-1 flex justify-end gap-2">
-                            <button @click="openEdit(client)" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">Edit</button>
-                            <button @click="destroy(client)" class="text-xs text-red-500 hover:text-red-700 font-medium">Delete</button>
+                            <button v-if="canEdit" @click="openEdit(client)" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">Edit</button>
+                            <button v-if="canDelete" @click="destroy(client)" class="text-xs text-red-500 hover:text-red-700 font-medium">Delete</button>
                         </div>
                     </div>
 

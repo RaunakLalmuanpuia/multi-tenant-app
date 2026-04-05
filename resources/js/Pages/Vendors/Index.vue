@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { router, useForm } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
+import { hasPermission } from '@/utils/permissions'
 
 const props = defineProps({
     business: Object,
@@ -11,6 +12,10 @@ const props = defineProps({
 // ── Form ──────────────────────────────────────────────────────
 const showModal  = ref(false)
 const editing    = ref(null)
+
+const canCreate = hasPermission('create vendor')
+const canEdit   = hasPermission('edit vendor')
+const canDelete = hasPermission('delete vendor')
 
 const form = useForm({ name: '', email: '', phone: '' })
 
@@ -55,6 +60,7 @@ function destroy(vendor) {
                     <p class="text-sm text-gray-500 mt-0.5">{{ vendors.length }} vendor{{ vendors.length !== 1 ? 's' : '' }}</p>
                 </div>
                 <button
+                    v-if="canCreate"
                     @click="openCreate"
                     class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition"
                 >
@@ -86,8 +92,8 @@ function destroy(vendor) {
                         <div class="col-span-4 text-sm text-gray-500">{{ vendor.email ?? '—' }}</div>
                         <div class="col-span-3 text-sm text-gray-500">{{ vendor.phone ?? '—' }}</div>
                         <div class="col-span-1 flex justify-end gap-2">
-                            <button @click="openEdit(vendor)" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">Edit</button>
-                            <button @click="destroy(vendor)" class="text-xs text-red-500 hover:text-red-700 font-medium">Delete</button>
+                            <button v-if="canEdit" @click="openEdit(vendor)" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">Edit</button>
+                            <button v-if="canDelete" @click="destroy(vendor)" class="text-xs text-red-500 hover:text-red-700 font-medium">Delete</button>
                         </div>
                     </div>
 

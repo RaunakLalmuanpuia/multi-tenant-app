@@ -5,7 +5,8 @@ import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link, router, usePage } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3'
+import { hasPermission } from '@/utils/permissions';
 
 const showingNavigationDropdown = ref(false)
 const showInvitations = ref(false)
@@ -141,21 +142,25 @@ function declineInvitation(token) {
                                     >Dashboard</NavLink>
 
                                     <NavLink
+                                        v-if="hasPermission('view users')"
                                         :href="route('team.index', { business: currentBusinessId() })"
                                         :active="route().current('team.index')"
                                     >Team</NavLink>
 
                                     <NavLink
+                                        v-if="hasPermission('view clients')"
                                         :href="route('clients.index', { business: currentBusinessId() })"
                                         :active="route().current('clients.index')"
                                     >Clients</NavLink>
 
                                     <NavLink
+                                        v-if="hasPermission('view vendors')"
                                         :href="route('vendors.index', { business: currentBusinessId() })"
                                         :active="route().current('vendors.index')"
                                     >Vendors</NavLink>
 
                                     <NavLink
+                                        v-if="hasPermission('assign roles')"
                                         :href="route('roles.index', { business: currentBusinessId() })"
                                         :active="route().current('roles.index')"
                                     >Roles</NavLink>

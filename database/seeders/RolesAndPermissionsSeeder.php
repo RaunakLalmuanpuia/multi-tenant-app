@@ -27,56 +27,17 @@ class RolesAndPermissionsSeeder extends Seeder
             // Dashboard
             'view dashboard',
 
-            // Invoices
-            'view invoices',
-            'create invoice',
-            'edit invoice',
-            'delete invoice',
-            'send invoice',
-
-            // Bills & Expenses
-            'view bills',
-            'create bill',
-            'edit bill',
-            'delete bill',
-
-            // Payments
-            'view payments',
-            'record payment',
-            'edit payment',
-            'delete payment',
-
-            // Clients / Customers
+            // Clients
             'view clients',
             'create client',
             'edit client',
             'delete client',
 
-            // Vendors / Suppliers
+            // Vendors
             'view vendors',
             'create vendor',
             'edit vendor',
             'delete vendor',
-
-            // Chart of Accounts
-            'view accounts',
-            'create account',
-            'edit account',
-            'delete account',
-
-            // Journal Entries / Transactions
-            'view transactions',
-            'create transaction',
-            'edit transaction',
-            'delete transaction',
-
-            // Reports
-            'view reports',
-            'export reports',
-
-            // Tax
-            'view tax',
-            'manage tax',
 
             // Business Settings
             'view settings',
@@ -107,31 +68,7 @@ class RolesAndPermissionsSeeder extends Seeder
          * Full control within their own business, including user management.
          */
         $owner = Role::firstOrCreate(['name' => 'owner']);
-        $owner->syncPermissions([
-            'view dashboard',
-
-            'view invoices', 'create invoice', 'edit invoice', 'delete invoice', 'send invoice',
-
-            'view bills', 'create bill', 'edit bill', 'delete bill',
-
-            'view payments', 'record payment', 'edit payment', 'delete payment',
-
-            'view clients', 'create client', 'edit client', 'delete client',
-
-            'view vendors', 'create vendor', 'edit vendor', 'delete vendor',
-
-            'view accounts', 'create account', 'edit account', 'delete account',
-
-            'view transactions', 'create transaction', 'edit transaction', 'delete transaction',
-
-            'view reports', 'export reports',
-
-            'view tax', 'manage tax',
-
-            'view settings', 'manage settings',
-
-            'view users', 'invite user', 'remove user', 'assign roles',
-        ]);
+        $owner->syncPermissions($permissions);
 
         /**
          * CA (Chartered Accountant) — Senior accountant.
@@ -141,23 +78,13 @@ class RolesAndPermissionsSeeder extends Seeder
         $ca->syncPermissions([
             'view dashboard',
 
-            'view invoices', 'create invoice', 'edit invoice', 'delete invoice', 'send invoice',
-
-            'view bills', 'create bill', 'edit bill', 'delete bill',
-
-            'view payments', 'record payment', 'edit payment', 'delete payment',
-
             'view clients', 'create client', 'edit client', 'delete client',
 
             'view vendors', 'create vendor', 'edit vendor', 'delete vendor',
 
-            'view accounts', 'create account', 'edit account', 'delete account',
+            'view settings',
 
-            'view transactions', 'create transaction', 'edit transaction', 'delete transaction',
-
-            'view reports', 'export reports',
-
-            'view tax', 'manage tax',
+            'view users', 'invite user',
         ]);
 
         /**
@@ -168,21 +95,9 @@ class RolesAndPermissionsSeeder extends Seeder
         $user->syncPermissions([
             'view dashboard',
 
-            'view invoices', 'create invoice',
-
-            'view bills', 'create bill',
-
-            'view payments', 'record payment',
-
             'view clients', 'create client',
 
             'view vendors', 'create vendor',
-
-            'view accounts',
-
-            'view transactions', 'create transaction',
-
-            'view reports',
         ]);
     }
 }
