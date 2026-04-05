@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TeamMemberController;
@@ -49,12 +50,19 @@ Route::middleware(['auth', 'verified', 'member'])
         Route::put('/settings/team/{user}', [TeamMemberController::class, 'update'])->name('team.update');
         Route::delete('/settings/team/{user}', [TeamMemberController::class, 'destroy'])->name('team.destroy');
 
+        Route::post('/invitations', [InvitationController::class, 'store'])->name('invitation.store');
+        Route::delete('/invitations/{invitation}', [InvitationController::class, 'destroy'])->name('invitation.destroy');
+
         Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
         Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
         Route::put('/roles/{role}', [RoleController::class, 'update'])->name('roles.update');
         Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
 
     });
+
+// ── Invitations (public token link, auth checked in controller) ───────
+Route::get('/invite/{token}', [InvitationController::class, 'show'])->name('invitation.show');
+Route::post('/invite/{token}/accept', [InvitationController::class, 'accept'])->name('invitation.accept');
 
 // ── Profile (auth only, no business required) ─────────────────────────
 Route::middleware('auth')->group(function () {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Business;
 use App\Models\BusinessUserRole;
+use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
@@ -24,10 +25,26 @@ class TeamMemberController extends Controller
                     : null,
             ]);
 
+        $pendingInvitations = Invitation::with('role')
+            ->where('business_id', $business->id)
+            ->whereNull('accepted_at')
+            ->where('expires_at', '>', now())
+            ->get()
+            ->map(fn($inv) => [
+                'id'         => $inv->id,
+                'email'      => $inv->email,
+                'role_name'  => $inv->role->name,
+                'expires_at' => $inv->expires_at->toDateString(),
+            ]);
+
         return inertia('Settings/Team', [
-            'business' => $business,
-            'members'  => $members,
-            'roles'    => Role::select('id', 'name')->orderBy('name')->get(),
+            'business'           => $business,
+            'members'            => $members,
+            'pendingInvitations' => $pendingInvitations,
+            'roles'              => Role::select('id', 'name')
+                ->where('name', '!=', 'admin')
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 
