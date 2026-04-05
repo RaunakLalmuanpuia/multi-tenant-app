@@ -1,19 +1,14 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TeamMemberController;
-use App\Http\Requests\Auth\LoginRequest;
-use App\Models\User;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Foundation\Application;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
+
 
 // ── Welcome ───────────────────────────────────────────────────────────
 Route::get('/', function () {
@@ -27,62 +22,15 @@ Route::get('/', function () {
 
 // ── Auth (guest) ──────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
-
-    Route::get('login', fn () => Inertia::render('Auth/Login', [
-        'canResetPassword' => true,
-        'status'           => session('status'),
-    ]))->name('login');
-
-    Route::post('login', function (LoginRequest $request) {
-        $request->authenticate();
-        $request->session()->regenerate();
-        $user = $request->user();
-
-        if ($user->hasRole('admin')) {
-            return redirect()->intended(route('admin.dashboard'));
-        }
-        $business = $user->businesses()->first();
-        return redirect()->intended(
-            $business ? route('dashboard', ['business' => $business->id]) : route('profile.edit')
-        );
-    })->name('login.store');
-
-    Route::get('register', fn () => Inertia::render('Auth/Register'))->name('register');
-
-    Route::post('register', function (Request $request) {
-        $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|string|lowercase|email|max:255|unique:' . User::class,
-            'password' => ['required', 'confirmed', Password::defaults()],
-        ]);
-
-        $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
-
-        event(new Registered($user));
-        Auth::login($user);
-
-        $business = $user->businesses()->first();
-        return redirect(
-            $business ? route('dashboard', ['business' => $business->id]) : route('profile.edit')
-        );
-    });
-
+    Route::get('login', [AuthController::class, 'loginForm'])->name('login');
+    Route::post('login', [AuthController::class, 'login'])->name('login.store');
+    Route::get('register', [AuthController::class, 'registerForm'])->name('register');
+    Route::post('register', [AuthController::class, 'register'])->name('register.store');
 });
 
 // ── Auth (authenticated) ──────────────────────────────────────────────
 Route::middleware('auth')->group(function () {
-
-    Route::post('logout', function (Request $request) {
-        Auth::guard('web')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-        return redirect('/');
-    })->name('logout');
-
+    Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 });
 
 // ── Admin (no business context) ───────────────────────────────────────

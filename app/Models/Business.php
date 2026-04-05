@@ -7,8 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Business extends Model
 {
-    //
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'is_personal'];
+
+    protected $casts = [
+        'is_personal' => 'boolean',
+    ];
 
     public function users(): BelongsToMany
     {

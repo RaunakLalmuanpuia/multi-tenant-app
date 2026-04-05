@@ -16,7 +16,7 @@ abstract class Controller
             return route('admin.dashboard');
         }
 
-        $business = $user->businesses()->first();
+        $business = $user->lastBusiness ?? $user->businesses()->first();
 
         return $business
             ? route('dashboard', ['business' => $business->id])

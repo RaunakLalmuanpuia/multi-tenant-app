@@ -26,6 +26,11 @@ class EnsureBelongsToBusiness
             abort(403, 'You do not belong to this business.');
         }
 
+        // Track last visited business
+        if ($business && $user->last_business_id !== $business->id) {
+            $user->updateQuietly(['last_business_id' => $business->id]);
+        }
+
         return $next($request);
     }
 }

@@ -2,47 +2,86 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\BusinessUserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, HasRoles;
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'password'          => 'hashed',
         ];
     }
 
-    public function businesses():BelongsToMany
+    // ── Relationships ─────────────────────────────────────────────────
+
+    public function businesses(): BelongsToMany
     {
         return $this->belongsToMany(Business::class, 'business_user');
     }
 
-    public function businessRoles() :HasMany
+    public function personalBusiness(): BelongsTo
+    {
+        return $this->belongsTo(Business::class, 'last_business_id')
+            ->where('is_personal', true);
+    }
+
+    public function lastBusiness(): BelongsTo
+    {
+        return $this->belongsTo(Business::class, 'last_business_id');
+    }
+
+    public function businessRoles(): HasMany
     {
         return $this->hasMany(BusinessUserRole::class);
     }
 
+    // ── Personal business ─────────────────────────────────────────────
+
+    /**
+     * Auto-create a personal business for the user on registration.
+     * Sets it as their last visited business.
+     */
+    public function createPersonalBusiness(string $roleName = 'owner', ?string $businessName = null): Business
+    {
+        $business = Business::create([
+            'name'        => $businessName ?? $this->name . "'s Business",
+            'is_personal' => true,
+        ]);
+
+        $ownerRole = Role::where('name', $roleName)->first();
+
+        $this->businesses()->attach($business->id);
+
+        BusinessUserRole::create([
+            'user_id'     => $this->id,
+            'business_id' => $business->id,
+            'role_id'     => $ownerRole->id,
+        ]);
+
+        // Record as last visited
+        $this->updateQuietly(['last_business_id' => $business->id]);
+
+        return $business;
+    }
+
+    // ── Permission helpers ────────────────────────────────────────────
 
     public function hasRoleInBusiness($roleName, ?int $businessId = null): bool
     {

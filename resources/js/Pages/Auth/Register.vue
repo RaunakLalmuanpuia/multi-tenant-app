@@ -11,6 +11,8 @@ const form = useForm({
     email: '',
     password: '',
     password_confirmation: '',
+    role: '',
+    business_name: '',
 });
 
 const submit = () => {
@@ -25,9 +27,58 @@ const submit = () => {
         <Head title="Register" />
 
         <form @submit.prevent="submit">
+            <!-- Role selection -->
             <div>
-                <InputLabel for="name" value="Name" />
+                <InputLabel value="I am registering as" />
+                <div class="mt-2 grid grid-cols-2 gap-3">
+                    <button
+                        type="button"
+                        @click="form.role = 'owner'"
+                        :class="[
+                            'flex flex-col items-start rounded-lg border-2 p-4 text-left transition',
+                            form.role === 'owner'
+                                ? 'border-indigo-600 bg-indigo-50'
+                                : 'border-gray-200 hover:border-gray-300',
+                        ]"
+                    >
+                        <span class="text-lg">🏢</span>
+                        <span class="mt-1 font-semibold text-gray-900 text-sm">Business Owner</span>
+                        <span class="mt-0.5 text-xs text-gray-500">I own a business and want to manage its accounting</span>
+                    </button>
 
+                    <button
+                        type="button"
+                        @click="form.role = 'ca'"
+                        :class="[
+                            'flex flex-col items-start rounded-lg border-2 p-4 text-left transition',
+                            form.role === 'ca'
+                                ? 'border-indigo-600 bg-indigo-50'
+                                : 'border-gray-200 hover:border-gray-300',
+                        ]"
+                    >
+                        <span class="text-lg">📊</span>
+                        <span class="mt-1 font-semibold text-gray-900 text-sm">CA / Accountant</span>
+                        <span class="mt-0.5 text-xs text-gray-500">I'm an accountant managing clients' books</span>
+                    </button>
+                </div>
+                <InputError class="mt-2" :message="form.errors.role" />
+            </div>
+
+            <div class="mt-4">
+                <InputLabel for="business_name" value="Business Name" />
+                <TextInput
+                    id="business_name"
+                    type="text"
+                    class="mt-1 block w-full"
+                    v-model="form.business_name"
+                    required
+                    autocomplete="organization"
+                />
+                <InputError class="mt-2" :message="form.errors.business_name" />
+            </div>
+
+            <div class="mt-4">
+                <InputLabel for="name" value="Your Name" />
                 <TextInput
                     id="name"
                     type="text"
@@ -37,13 +88,11 @@ const submit = () => {
                     autofocus
                     autocomplete="name"
                 />
-
                 <InputError class="mt-2" :message="form.errors.name" />
             </div>
 
             <div class="mt-4">
                 <InputLabel for="email" value="Email" />
-
                 <TextInput
                     id="email"
                     type="email"
@@ -52,13 +101,11 @@ const submit = () => {
                     required
                     autocomplete="username"
                 />
-
                 <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
             <div class="mt-4">
                 <InputLabel for="password" value="Password" />
-
                 <TextInput
                     id="password"
                     type="password"
@@ -67,16 +114,11 @@ const submit = () => {
                     required
                     autocomplete="new-password"
                 />
-
                 <InputError class="mt-2" :message="form.errors.password" />
             </div>
 
             <div class="mt-4">
-                <InputLabel
-                    for="password_confirmation"
-                    value="Confirm Password"
-                />
-
+                <InputLabel for="password_confirmation" value="Confirm Password" />
                 <TextInput
                     id="password_confirmation"
                     type="password"
@@ -85,11 +127,7 @@ const submit = () => {
                     required
                     autocomplete="new-password"
                 />
-
-                <InputError
-                    class="mt-2"
-                    :message="form.errors.password_confirmation"
-                />
+                <InputError class="mt-2" :message="form.errors.password_confirmation" />
             </div>
 
             <div class="mt-4 flex items-center justify-end">
