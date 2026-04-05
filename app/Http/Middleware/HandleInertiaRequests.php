@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\BusinessRolePermission;
 use App\Models\Invitation;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -55,15 +56,23 @@ class HandleInertiaRequests extends Middleware
                     $user === null          => [],
                     $user->hasRole('admin') => Permission::pluck('name'),
                     $business === null      => [],
-                    default                 => $user->businessRoles()
-                        ->where('business_id', $business->id)
-                        ->with('role.permissions')
-                        ->get()
-                        ->pluck('role.permissions')
-                        ->flatten()
-                        ->pluck('name')
-                        ->unique()
-                        ->values(),
+                    default => (function () use ($user, $business) {
+                        $businessRole = $user->businessRoles()
+                            ->where('business_id', $business->id)
+                            ->with('role.permissions')
+                            ->first();
+
+                        if (!$businessRole) return collect();
+
+                        $override = BusinessRolePermission::where('business_id', $business->id)
+                            ->where('role_id', $businessRole->role_id)
+                            ->with('permission')
+                            ->get();
+
+                        return $override->isNotEmpty()
+                            ? $override->pluck('permission.name')->unique()->values()
+                            : $businessRole->role->permissions->pluck('name')->values();
+                    })(),
                 },
             ],
         ];

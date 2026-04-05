@@ -4,10 +4,13 @@ import { router, usePage } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 
 const props = defineProps({
+    business: Object,
     roles: Array,
     permissionGroups: Array,
     systemRoles: Array,
 })
+
+const business = props.business
 
 // ── Modal state ────────────────────────────────────────────────
 const showModal   = ref(false)
@@ -77,12 +80,12 @@ function submit() {
     errors.value = {}
 
     if (editingRole.value) {
-        router.put(route('roles.update', editingRole.value.id), form.value, {
+        router.put(route('roles.update', { business: business.id, role: editingRole.value.id }), form.value, {
             onSuccess: closeModal,
             onError: e => (errors.value = e),
         })
     } else {
-        router.post(route('roles.store'), form.value, {
+        router.post(route('roles.store', { business: business.id }), form.value, {
             onSuccess: closeModal,
             onError: e => (errors.value = e),
         })
@@ -93,7 +96,7 @@ function submit() {
 const confirmDelete = ref(null)
 
 function deleteRole(role) {
-    router.delete(route('roles.destroy', role.id), {
+    router.delete(route('roles.destroy', { business: business.id, role: role.id }), {
         onSuccess: () => (confirmDelete.value = null),
     })
 }
@@ -138,6 +141,10 @@ const isSystem = (role) => props.systemRoles.includes(role.name)
                                 v-if="isSystem(role)"
                                 class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium"
                             >system</span>
+                            <span
+                                v-if="role.is_customized"
+                                class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-medium"
+                            >customized</span>
                         </div>
                         <p class="text-xs text-gray-400 mb-3">{{ rolePermCount(role) }}</p>
 

@@ -28,7 +28,9 @@ class EnsureBelongsToBusiness
 
         // Track last visited business
         if ($business && $user->last_business_id !== $business->id) {
-            $user->updateQuietly(['last_business_id' => $business->id]);
+            \Illuminate\Support\Facades\DB::table('users')
+                ->where('id', $user->id)
+                ->update(['last_business_id' => $business->id]);
         }
 
         return $next($request);

@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Business;
+use App\Models\BusinessRolePermission;
 use Illuminate\Http\Request;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
-    // Roles that cannot be edited or deleted
     private const SYSTEM_ROLES = ['admin', 'owner'];
 
     private function permissionGroups(): array
@@ -29,28 +30,48 @@ class RoleController extends Controller
         ];
     }
 
-    public function index(\App\Models\Business $business)
+    public function index(Business $business)
     {
         $allPermissions = Permission::all()->keyBy('name');
 
         $permissionGroups = collect($this->permissionGroups())
             ->map(fn($names, $group) => [
                 'group'       => $group,
-                'permissions' => collect($names)
-                    ->map(fn($name) => $allPermissions->get($name))
-                    ->filter()
-                    ->values(),
+                'permissions' => collect($names)->map(fn($name) => $allPermissions->get($name))->filter()->values(),
             ])
             ->values();
 
+        // Business-specific permission overrides grouped by role_id
+        $overrides = BusinessRolePermission::where('business_id', $business->id)
+            ->with('permission')
+            ->get()
+            ->groupBy('role_id');
+
+        $roles = Role::with('permissions')->get()->map(function (Role $role) use ($overrides) {
+            $businessOverride = $overrides->get($role->id);
+
+            // Use business-specific permissions if set, otherwise fall back to global
+            $effectivePermissions = $businessOverride
+                ? $businessOverride->map(fn($brp) => ['id' => $brp->permission->id, 'name' => $brp->permission->name])->values()
+                : $role->permissions->map(fn($p) => ['id' => $p->id, 'name' => $p->name])->values();
+
+            return [
+                'id'           => $role->id,
+                'name'         => $role->name,
+                'permissions'  => $effectivePermissions,
+                'is_customized'=> $businessOverride !== null,
+            ];
+        });
+
         return inertia('Roles/Index', [
-            'roles'            => Role::with('permissions')->get(),
+            'business'         => $business,
+            'roles'            => $roles,
             'permissionGroups' => $permissionGroups,
             'systemRoles'      => self::SYSTEM_ROLES,
         ]);
     }
 
-    public function store(Request $request, \App\Models\Business $business)
+    public function store(Request $request, Business $business)
     {
         $request->validate([
             'name'        => 'required|string|max:255|unique:roles,name',
@@ -58,12 +79,13 @@ class RoleController extends Controller
         ]);
 
         $role = Role::create(['name' => $request->name]);
-        $role->syncPermissions($request->permissions ?? []);
+
+        $this->syncBusinessPermissions($business->id, $role->id, $request->permissions ?? []);
 
         return back();
     }
 
-    public function update(Request $request, \App\Models\Business $business, Role $role)
+    public function update(Request $request, Business $business, Role $role)
     {
         abort_if(in_array($role->name, self::SYSTEM_ROLES), 403, 'System roles cannot be modified.');
 
@@ -73,16 +95,39 @@ class RoleController extends Controller
         ]);
 
         $role->update(['name' => $request->name]);
-        $role->syncPermissions($request->permissions ?? []);
+
+        $this->syncBusinessPermissions($business->id, $role->id, $request->permissions ?? []);
 
         return back();
     }
 
-    public function destroy(\App\Models\Business $business, Role $role)
+    public function destroy(Business $business, Role $role)
     {
         abort_if(in_array($role->name, self::SYSTEM_ROLES), 403, 'System roles cannot be deleted.');
 
+        BusinessRolePermission::where('business_id', $business->id)
+            ->where('role_id', $role->id)
+            ->delete();
+
         $role->delete();
+
         return back();
+    }
+
+    private function syncBusinessPermissions(string $businessId, int $roleId, array $permissionNames): void
+    {
+        $permissionIds = Permission::whereIn('name', $permissionNames)->pluck('id');
+
+        BusinessRolePermission::where('business_id', $businessId)
+            ->where('role_id', $roleId)
+            ->delete();
+
+        foreach ($permissionIds as $permissionId) {
+            BusinessRolePermission::create([
+                'business_id'   => $businessId,
+                'role_id'       => $roleId,
+                'permission_id' => $permissionId,
+            ]);
+        }
     }
 }

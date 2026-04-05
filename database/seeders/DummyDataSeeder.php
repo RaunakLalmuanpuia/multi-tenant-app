@@ -3,11 +3,13 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\User;
 use App\Models\Business;
+use App\Models\BusinessRolePermission;
 use App\Models\BusinessUserRole;
-use Spatie\Permission\Models\Role;
+use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class DummyDataSeeder extends Seeder
 {
@@ -27,9 +29,10 @@ class DummyDataSeeder extends Seeder
         // ─── Platform Admin (no business) ─────────────────────────────
         // Admin is a global platform role — not assigned to any business.
         $admin = User::create([
-            'name'     => 'Platform Admin',
-            'email'    => 'admin@example.com',
-            'password' => Hash::make('password'),
+            'name'              => 'Platform Admin',
+            'email'             => 'admin@example.com',
+            'password'          => Hash::make('password'),
+            'email_verified_at' => now(),
         ]);
         $admin->assignRole($adminRole); // Spatie global role — no business context
 
@@ -53,14 +56,47 @@ class DummyDataSeeder extends Seeder
             ['name' => 'Grace Nair',    'email' => 'grace@example.com',  'assignments' => [[$alpha, $ownerRole], [$gamma, $caRole]]],
         ];
 
+        // ─── Business-specific permission overrides ───────────────────
+        //
+        // Alpha: CA role is restricted — no delete or user-management permissions
+        // Beta:  User role gets extra reporting access
+        // Gamma: uses global defaults (no overrides)
+
+        $this->seedBusinessRolePermissions($alpha->id, $caRole->id, [
+            'view dashboard',
+            'view invoices', 'create invoice', 'edit invoice', 'send invoice',
+            'view bills', 'create bill', 'edit bill',
+            'view payments', 'record payment', 'edit payment',
+            'view clients', 'create client', 'edit client',
+            'view vendors', 'create vendor', 'edit vendor',
+            'view accounts', 'create account', 'edit account',
+            'view transactions', 'create transaction', 'edit transaction',
+            'view reports',
+            'view tax',
+        ]);
+
+        $this->seedBusinessRolePermissions($beta->id, $userRole->id, [
+            'view dashboard',
+            'view invoices', 'create invoice',
+            'view bills', 'create bill',
+            'view payments', 'record payment',
+            'view clients', 'create client',
+            'view vendors', 'create vendor',
+            'view accounts',
+            'view transactions', 'create transaction',
+            'view reports', 'export reports', // extra: export reports vs global default
+        ]);
+
+        // ─── Users ────────────────────────────────────────────────────
         foreach ($users as $userData) {
             $firstBusiness = $userData['assignments'][0][0];
 
             $user = User::create([
-                'name'             => $userData['name'],
-                'email'            => $userData['email'],
-                'password'         => Hash::make('password'),
-                'last_business_id' => $firstBusiness->id,
+                'name'              => $userData['name'],
+                'email'             => $userData['email'],
+                'password'          => Hash::make('password'),
+                'email_verified_at' => now(),
+                'last_business_id'  => $firstBusiness->id,
             ]);
 
             foreach ($userData['assignments'] as [$business, $role]) {
@@ -71,6 +107,19 @@ class DummyDataSeeder extends Seeder
                     'role_id'     => $role->id,
                 ]);
             }
+        }
+    }
+
+    private function seedBusinessRolePermissions(string $businessId, int $roleId, array $permissionNames): void
+    {
+        $permissionIds = Permission::whereIn('name', $permissionNames)->pluck('id');
+
+        foreach ($permissionIds as $permissionId) {
+            BusinessRolePermission::create([
+                'business_id'   => $businessId,
+                'role_id'       => $roleId,
+                'permission_id' => $permissionId,
+            ]);
         }
     }
 }

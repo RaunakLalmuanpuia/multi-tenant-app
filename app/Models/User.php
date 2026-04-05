@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Models\BusinessUserRole;
 use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,11 +14,18 @@ use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasRoles;
+
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'email_verified_at',
+        'last_business_id',
+    ];
 
     protected function casts(): array
     {
@@ -75,8 +81,10 @@ class User extends Authenticatable
             'role_id'     => $ownerRole->id,
         ]);
 
-        // Record as last visited
-        $this->updateQuietly(['last_business_id' => $business->id]);
+        // Record as last visited (use query builder to bypass any fillable edge cases)
+        \Illuminate\Support\Facades\DB::table('users')
+            ->where('id', $this->id)
+            ->update(['last_business_id' => $business->id]);
 
         return $business;
     }

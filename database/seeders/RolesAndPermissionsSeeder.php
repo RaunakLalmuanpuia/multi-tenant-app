@@ -6,6 +6,14 @@ use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
+/**
+ * Seeds global roles and their DEFAULT permissions via Spatie.
+ *
+ * These serve as fallback when a business has not customised a role.
+ * Business-specific overrides are stored in business_role_permissions
+ * and seeded in DummyDataSeeder.
+ */
+
 class RolesAndPermissionsSeeder extends Seeder
 {
     public function run(): void

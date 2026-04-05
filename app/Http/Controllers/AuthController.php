@@ -29,13 +29,13 @@ class AuthController extends Controller
         $user = $request->user();
 
         if ($user->hasRole('admin')) {
-            return redirect()->intended(route('admin.dashboard'));
+            return redirect(route('admin.dashboard'));
         }
 
         $business = $user->lastBusiness ?? $user->businesses()->first();
 
-        return redirect()->intended(
-            $business ? route('dashboard', ['business' => $business->id]) : route('profile.edit')
+        return redirect(
+            $business?->id ? route('dashboard', ['business' => $business->id]) : route('profile.edit')
         );
     }
 

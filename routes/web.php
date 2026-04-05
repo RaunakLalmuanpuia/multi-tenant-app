@@ -35,7 +35,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // ── Admin (no business context) ───────────────────────────────────────
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'adminIndex'])->name('admin.dashboard');
 });
 
